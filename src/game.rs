@@ -21,12 +21,25 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-// make on release to not show the console
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use crate::hello;
+use bevy::prelude::*;
 
-mod game;
-mod hello;
+const TITLE: &str = "Dice Master!";
 
-fn main() {
-    game::run();
+pub fn run() {
+    App::new()
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                title: TITLE.into(),
+                ..Default::default()
+            },
+            ..default()
+        }))
+        .add_startup_system(setup)
+        .add_startup_system(hello::hello_world)
+        .run();
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
 }
