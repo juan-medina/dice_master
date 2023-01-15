@@ -21,13 +21,22 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
+use super::State;
 use bevy::prelude::*;
+
+pub struct Hello;
+
+impl Plugin for Hello {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(SystemSet::on_enter(State::Hello).with_system(setup));
+    }
+}
 
 const FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const FONT_SIZE: f32 = 80.0;
 const FONT_COLOR: Color = Color::WHITE;
 
-pub fn hello_world(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((NodeBundle {
             style: Style {

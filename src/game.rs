@@ -21,7 +21,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use crate::hello;
+use crate::scenes::{self, State};
+
 use bevy::{
     log::LogPlugin,
     prelude::*,
@@ -64,9 +65,10 @@ pub fn run() {
         .insert_resource(WinitSettings::desktop_app())
         .add_system(bevy::window::close_on_esc)
         .add_startup_system(setup)
-        .add_startup_system(hello::hello_world)
         .add_system(scale_ui)
         .add_system(toggle_full_screen_on_alt_enter)
+        .add_state(State::Hello)
+        .add_plugin(scenes::Hello)
         .run();
 }
 
