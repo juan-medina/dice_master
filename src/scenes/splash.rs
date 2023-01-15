@@ -89,7 +89,7 @@ fn countdown(
 ) {
     if timer.tick(time.delta()).finished() {
         game_state
-            .set(State::Hello)
+            .set(State::Menu)
             .expect("Failed to set game state");
     }
 }

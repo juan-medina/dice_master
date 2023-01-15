@@ -58,6 +58,7 @@ impl Game {
         self.app
             .add_state(State::Splash)
             .add_plugin(scenes::Hello)
+            .add_plugin(scenes::Menu)
             .add_plugin(scenes::Splash);
     }
 
