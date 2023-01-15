@@ -21,8 +21,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-mod state;
-pub use state::State;
-
-mod game;
-pub use game::run;
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+pub enum State {
+    Splash,
+    Hello,
+}
