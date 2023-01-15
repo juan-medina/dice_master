@@ -21,8 +21,16 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-mod state;
-pub use state::State;
+use bevy::prelude::*;
 
 mod hello;
 pub use hello::Hello;
+
+mod splash;
+pub use splash::Splash;
+
+fn clear_scene<T: Component>(to_clear: Query<Entity, With<T>>, mut commands: Commands) {
+    for entity in &to_clear {
+        commands.entity(entity).despawn_recursive();
+    }
+}

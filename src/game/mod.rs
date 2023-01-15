@@ -21,8 +21,6 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use crate::scenes::{self, State};
-
 use bevy::{
     log::LogPlugin,
     prelude::*,
@@ -30,6 +28,14 @@ use bevy::{
     window::{WindowResizeConstraints, WindowResized},
     winit::WinitSettings,
 };
+
+use crate::scenes;
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+pub enum State {
+    Splash,
+    Hello,
+}
 
 const TITLE: &str = "Dice Master!";
 const LOG_FILTER: &str = "wgpu=error,dice_master=debug";
@@ -62,13 +68,15 @@ pub fn run() {
             allow_dynamic_font_size: true,
             ..default()
         })
+        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .insert_resource(WinitSettings::desktop_app())
         .add_system(bevy::window::close_on_esc)
         .add_startup_system(setup)
         .add_system(scale_ui)
         .add_system(toggle_full_screen_on_alt_enter)
-        .add_state(State::Hello)
+        .add_state(State::Splash)
         .add_plugin(scenes::Hello)
+        .add_plugin(scenes::Splash)
         .run();
 }
 
