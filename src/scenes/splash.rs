@@ -26,7 +26,7 @@ use crate::game::State;
 use bevy::prelude::*;
 
 const LOGO: &str = "splash/newolds.png";
-const AUDIO: &str = "splash/Evil_Laugh_Male_6.ogg";
+const AUDIO: &str = "splash/newolds.ogg";
 
 pub struct Splash;
 

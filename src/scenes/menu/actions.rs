@@ -24,7 +24,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 use crate::game::State;
 use bevy::{app::AppExit, prelude::*};
 
-const AUDIO: &str = "menu/ClickOn.ogg";
+const AUDIO: &str = "menu/click.ogg";
 
 #[derive(Component)]
 pub enum Action {
