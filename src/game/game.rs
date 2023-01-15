@@ -24,6 +24,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 use bevy::{
     log::LogPlugin,
     prelude::*,
+    render::camera::ScalingMode,
     text::TextSettings,
     window::{WindowResizeConstraints, WindowResized},
     winit::WinitSettings,
@@ -45,6 +46,7 @@ impl Game {
     pub fn new() -> Self {
         Self { app: App::new() }
     }
+
     pub fn run(&mut self) {
         self.default_plugins();
         self.insert_resources();
@@ -114,7 +116,9 @@ impl Game {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    let mut camera_bundle = Camera2dBundle::default();
+    camera_bundle.projection.scaling_mode = ScalingMode::FixedHorizontal(DESIGN_RESOLUTION.x);
+    commands.spawn(camera_bundle);
 }
 
 fn scale_ui(resize_event: Res<Events<WindowResized>>, mut ui_scale: ResMut<UiScale>) {

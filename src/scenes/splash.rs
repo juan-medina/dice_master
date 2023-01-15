@@ -25,6 +25,9 @@ use super::clear_scene;
 use crate::game::State;
 use bevy::prelude::*;
 
+const LOGO: &str = "splash/newolds.png";
+const AUDIO: &str = "splash/Evil_Laugh_Male_6.ogg";
+
 pub struct Splash;
 
 impl Plugin for Splash {
@@ -40,44 +43,21 @@ impl Plugin for Splash {
 #[derive(Component)]
 struct OnSplashScene;
 
-const FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
-const FONT_SIZE: f32 = 80.0;
-const FONT_COLOR: Color = Color::WHITE;
-
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
-                ..default()
-            },
-            OnSplashScene,
-        ))
-        .with_children(|parent| {
-            parent.spawn(
-                TextBundle::from_section(
-                    "Splash Screen",
-                    TextStyle {
-                        font: asset_server.load(FONT_NAME),
-                        font_size: FONT_SIZE,
-                        color: FONT_COLOR,
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(50.0)),
-                    ..default()
-                }),
-            );
-        });
-    commands.insert_resource(SplashTimer(Timer::from_seconds(1.0, TimerMode::Once)));
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audio>) {
+    commands.spawn((
+        SpriteBundle {
+            texture: asset_server.load(LOGO),
+            ..default()
+        },
+        OnSplashScene,
+    ));
+
+    audio.play(asset_server.load(AUDIO));
+
+    commands.insert_resource(SplashTimer(Timer::from_seconds(10.0, TimerMode::Once)));
 }
 
 use bevy::prelude::State as BevyState;
