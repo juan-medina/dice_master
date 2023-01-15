@@ -21,17 +21,21 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use super::clear_scene;
+use super::{
+    super::clear_scene,
+    actions::{self, Action},
+    buttons,
+};
 use crate::game::State;
-use bevy::{app::AppExit, prelude::*};
+use bevy::prelude::*;
 
 pub struct Menu;
 
 impl Plugin for Menu {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(State::Menu).with_system(setup))
-            .add_system_set(SystemSet::on_update(State::Menu).with_system(colors))
-            .add_system_set(SystemSet::on_update(State::Menu).with_system(actions))
+            .add_system_set(SystemSet::on_update(State::Menu).with_system(buttons::colors))
+            .add_system_set(SystemSet::on_update(State::Menu).with_system(actions::system))
             .add_system_set(
                 SystemSet::on_exit(State::Menu).with_system(clear_scene::<OnMenuScene>),
             );
@@ -89,85 +93,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                             ..default()
                         }),
                     );
-                    add(parent, "Play", Action::Play, asset_server.as_ref());
-                    add(parent, "Quit", Action::Quit, asset_server.as_ref());
+                    buttons::add(parent, "Play", Action::Play, asset_server.as_ref());
+                    buttons::add(parent, "Quit", Action::Quit, asset_server.as_ref());
                 });
         });
-}
-
-pub const NORMAL_COLOR: Color = Color::rgb(0.30, 0.15, 0.15);
-pub const HOVERED_COLOR: Color = Color::rgb(0.45, 0.25, 0.25);
-pub const PRESSED_COLOR: Color = Color::rgb(1.0, 0.35, 0.35);
-pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const BUTTON_FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
-const BUTTON_FONT_SIZE: f32 = 40.0;
-
-#[derive(Component)]
-pub enum Action {
-    Play,
-    Quit,
-}
-
-pub fn colors(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color) in &mut interaction_query {
-        *color = match *interaction {
-            Interaction::Clicked => PRESSED_COLOR.into(),
-            Interaction::Hovered => HOVERED_COLOR.into(),
-            Interaction::None => NORMAL_COLOR.into(),
-        }
-    }
-}
-
-pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, asset_server: &AssetServer) {
-    parent
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    size: Size::new(Val::Px(200.0), Val::Px(65.0)),
-                    // center button
-                    margin: UiRect::all(Val::Px(10.0)),
-                    // horizontally center child text
-                    justify_content: JustifyContent::Center,
-                    // vertically center child text
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                background_color: NORMAL_COLOR.into(),
-                ..default()
-            },
-            action,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                text,
-                TextStyle {
-                    font: asset_server.load(BUTTON_FONT_NAME),
-                    font_size: BUTTON_FONT_SIZE,
-                    color: TEXT_COLOR,
-                },
-            ));
-        });
-}
-
-use bevy::prelude::State as BevyState;
-pub fn actions(
-    interaction_query: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
-    mut app_exit_events: EventWriter<AppExit>,
-    mut game_state: ResMut<BevyState<State>>,
-) {
-    for (interaction, button_action) in &interaction_query {
-        if *interaction == Interaction::Clicked {
-            match button_action {
-                Action::Quit => app_exit_events.send(AppExit),
-                Action::Play => game_state
-                    .set(State::Hello)
-                    .expect("Failed to set game state"),
-            }
-        }
-    }
 }
