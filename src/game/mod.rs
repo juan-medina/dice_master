@@ -25,4 +25,4 @@ mod state;
 pub use state::State;
 
 mod game;
-pub use game::run;
+pub use game::Game;

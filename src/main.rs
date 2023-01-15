@@ -27,6 +27,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 mod game;
 mod scenes;
 
+use game::Game;
+
 fn main() {
-    game::run();
+    Game::new().run();
 }

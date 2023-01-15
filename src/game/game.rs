@@ -37,43 +37,79 @@ const LOG_FILTER: &str = "wgpu=error,dice_master=debug";
 const DESIGN_RESOLUTION: Vec2 = Vec2::new(1920., 1080.);
 const CLEAR_COLOR: Color = Color::rgb(0., 0., 0.);
 
-pub fn run() {
-    App::new()
-        .add_plugins(
+pub struct Game {
+    app: App,
+}
+
+impl Game {
+    pub fn new() -> Self {
+        Self { app: App::new() }
+    }
+    pub fn run(&mut self) {
+        self.default_plugins();
+        self.insert_resources();
+        self.add_main_systems();
+        self.set_scenes();
+
+        self.app.run();
+    }
+
+    fn set_scenes(&mut self) {
+        self.app
+            .add_state(State::Splash)
+            .add_plugin(scenes::Hello)
+            .add_plugin(scenes::Splash);
+    }
+
+    fn insert_resources(&mut self) {
+        self.app
+            .insert_resource(ClearColor(CLEAR_COLOR))
+            .insert_resource(WinitSettings::desktop_app())
+            .insert_resource(TextSettings {
+                allow_dynamic_font_size: true,
+                ..default()
+            });
+    }
+
+    fn add_main_systems(&mut self) {
+        self.app
+            .add_startup_system(setup)
+            .add_system(scale_ui)
+            .add_system(toggle_full_screen_on_alt_enter)
+            .add_system(bevy::window::close_on_esc);
+    }
+
+    fn default_plugins(&mut self) -> &mut App {
+        self.app.add_plugins(
             DefaultPlugins
-                .set(WindowPlugin {
-                    window: WindowDescriptor {
-                        title: TITLE.into(),
-                        width: DESIGN_RESOLUTION.x,
-                        height: DESIGN_RESOLUTION.y,
-                        resize_constraints: WindowResizeConstraints {
-                            min_width: DESIGN_RESOLUTION.x / 2.,
-                            min_height: DESIGN_RESOLUTION.y / 2.,
-                            ..default()
-                        },
-                        ..Default::default()
-                    },
-                    ..default()
-                })
-                .set(LogPlugin {
-                    filter: LOG_FILTER.into(),
-                    level: bevy::log::Level::INFO,
-                }),
+                .set(self.setup_window())
+                .set(self.setup_log()),
         )
-        .insert_resource(TextSettings {
-            allow_dynamic_font_size: true,
+    }
+
+    fn setup_window(&self) -> WindowPlugin {
+        WindowPlugin {
+            window: WindowDescriptor {
+                title: TITLE.into(),
+                width: DESIGN_RESOLUTION.x,
+                height: DESIGN_RESOLUTION.y,
+                resize_constraints: WindowResizeConstraints {
+                    min_width: DESIGN_RESOLUTION.x / 2.,
+                    min_height: DESIGN_RESOLUTION.y / 2.,
+                    ..default()
+                },
+                ..Default::default()
+            },
             ..default()
-        })
-        .insert_resource(ClearColor(CLEAR_COLOR))
-        .insert_resource(WinitSettings::desktop_app())
-        .add_system(bevy::window::close_on_esc)
-        .add_startup_system(setup)
-        .add_system(scale_ui)
-        .add_system(toggle_full_screen_on_alt_enter)
-        .add_state(State::Splash)
-        .add_plugin(scenes::Hello)
-        .add_plugin(scenes::Splash)
-        .run();
+        }
+    }
+
+    fn setup_log(&self) -> LogPlugin {
+        LogPlugin {
+            filter: LOG_FILTER.into(),
+            level: bevy::log::Level::INFO,
+        }
+    }
 }
 
 fn setup(mut commands: Commands) {
@@ -94,11 +130,11 @@ fn toggle_full_screen_on_alt_enter(input: Res<Input<KeyCode>>, windows: ResMut<W
     if (input.pressed(KeyCode::LAlt) || input.pressed(KeyCode::RAlt))
         && input.just_pressed(KeyCode::Return)
     {
-        toggle_full_screen(windows);
+        change_window_mode(windows);
     }
 }
 
-fn toggle_full_screen(mut windows: ResMut<Windows>) {
+fn change_window_mode(mut windows: ResMut<Windows>) {
     let window = windows
         .get_primary_mut()
         .expect("we should have a primary window");
