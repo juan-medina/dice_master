@@ -35,6 +35,7 @@ use crate::scenes;
 const TITLE: &str = "Dice Master!";
 const LOG_FILTER: &str = "wgpu=error,dice_master=debug";
 const DESIGN_RESOLUTION: Vec2 = Vec2::new(1920., 1080.);
+const CLEAR_COLOR: Color = Color::rgb(0., 0., 0.);
 
 pub fn run() {
     App::new()
@@ -63,7 +64,7 @@ pub fn run() {
             allow_dynamic_font_size: true,
             ..default()
         })
-        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
+        .insert_resource(ClearColor(CLEAR_COLOR))
         .insert_resource(WinitSettings::desktop_app())
         .add_system(bevy::window::close_on_esc)
         .add_startup_system(setup)
