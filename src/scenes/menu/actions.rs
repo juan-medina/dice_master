@@ -24,6 +24,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 use crate::game::State;
 use bevy::{app::AppExit, prelude::*};
 
+const AUDIO: &str = "menu/ClickOn.ogg";
+
 #[derive(Component)]
 pub enum Action {
     Play,
@@ -36,6 +38,8 @@ pub fn system(
     interaction_query: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
     mut app_exit_events: EventWriter<AppExit>,
     mut game_state: ResMut<BevyState<State>>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for (interaction, button_action) in &interaction_query {
         if *interaction == Interaction::Clicked {
@@ -45,6 +49,7 @@ pub fn system(
                     .set(State::Hello)
                     .expect("Failed to set game state"),
             }
+            audio.play(asset_server.load(AUDIO));
         }
     }
 }
