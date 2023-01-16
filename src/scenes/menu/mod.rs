@@ -23,6 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 mod menu;
 pub use menu::Menu;
+pub use menu::Submenu;
 
 mod actions;
 mod buttons;

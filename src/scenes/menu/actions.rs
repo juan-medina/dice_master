@@ -22,14 +22,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
 use crate::game::State;
+use crate::scenes::menu::Submenu;
 use bevy::{app::AppExit, prelude::*};
 
 const AUDIO: &str = "menu/click.ogg";
 
-#[derive(Component)]
+#[derive(Component, PartialEq)]
 pub enum Action {
     Play,
+    Options,
+    Windowed,
+    FullScreen,
     Quit,
+    Back,
 }
 
 use bevy::prelude::State as BevyState;
@@ -40,14 +45,39 @@ pub fn system(
     mut game_state: ResMut<BevyState<State>>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
+    mut menu_state: ResMut<BevyState<Submenu>>,
+    mut windows: ResMut<Windows>,
 ) {
     for (interaction, button_action) in &interaction_query {
         if *interaction == Interaction::Clicked {
             match button_action {
                 Action::Quit => app_exit_events.send(AppExit),
-                Action::Play => game_state
-                    .set(State::Hello)
-                    .expect("Failed to set game state"),
+                Action::Play => {
+                    game_state
+                        .set(State::Hello)
+                        .expect("Failed to set game state");
+                    menu_state
+                        .set(Submenu::None)
+                        .expect("Failed to set menu state");
+                }
+                Action::Options => menu_state
+                    .set(Submenu::Options)
+                    .expect("Failed to set menu state"),
+                Action::Back => menu_state
+                    .set(Submenu::Main)
+                    .expect("Failed to set menu state"),
+                Action::Windowed => {
+                    let window = windows
+                        .get_primary_mut()
+                        .expect("we should have a primary window");
+                    window.set_mode(WindowMode::Windowed);
+                }
+                Action::FullScreen => {
+                    let window = windows
+                        .get_primary_mut()
+                        .expect("we should have a primary window");
+                    window.set_mode(WindowMode::BorderlessFullscreen);
+                }
             }
             audio.play(asset_server.load(AUDIO));
         }

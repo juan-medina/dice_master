@@ -25,24 +25,33 @@ use bevy::prelude::*;
 
 use super::actions::Action;
 
-pub const NORMAL_COLOR: Color = Color::rgb(0.30, 0.15, 0.15);
-pub const HOVERED_COLOR: Color = Color::rgb(0.45, 0.25, 0.25);
-pub const PRESSED_COLOR: Color = Color::rgb(1.0, 0.35, 0.35);
+#[derive(Component)]
+pub struct SelectedButton;
+
+pub const NORMAL_COLOR: Color = Color::rgb(0.15, 0.15, 0.15);
+pub const HOVERED_COLOR: Color = Color::rgb(0.25, 0.25, 0.25);
+pub const HOVERED_SELECTED_COLOR: Color = Color::rgb(0.25, 0.65, 0.25);
+pub const CLICKED_COLOR: Color = Color::rgb(0.35, 0.75, 0.35);
+
 pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+
 const BUTTON_FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const BUTTON_FONT_SIZE: f32 = 40.0;
+const BUTTON_FONT_SIZE_SMALL: f32 = 30.0;
 
 pub fn colors(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
+        (&Interaction, &mut BackgroundColor, Option<&SelectedButton>),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color) in &mut interaction_query {
-        *color = match *interaction {
-            Interaction::Clicked => PRESSED_COLOR.into(),
-            Interaction::Hovered => HOVERED_COLOR.into(),
-            Interaction::None => NORMAL_COLOR.into(),
+    for (interaction, mut color, selected) in &mut interaction_query {
+        *color = match (*interaction, selected) {
+            (Interaction::Clicked, _) => CLICKED_COLOR.into(),
+            (Interaction::Hovered, Some(_)) => HOVERED_SELECTED_COLOR.into(),
+            (Interaction::Hovered, None) => HOVERED_COLOR.into(),
+            (Interaction::None, Some(_)) => CLICKED_COLOR.into(),
+            (Interaction::None, None) => NORMAL_COLOR.into(),
         }
     }
 }
@@ -53,11 +62,8 @@ pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, asset_server: 
             ButtonBundle {
                 style: Style {
                     size: Size::new(Val::Px(200.0), Val::Px(65.0)),
-                    // center button
                     margin: UiRect::all(Val::Px(10.0)),
-                    // horizontally center child text
                     justify_content: JustifyContent::Center,
-                    // vertically center child text
                     align_items: AlignItems::Center,
                     ..default()
                 },
@@ -76,4 +82,71 @@ pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, asset_server: 
                 },
             ));
         });
+}
+
+pub fn setting(
+    parent: &mut ChildBuilder,
+    text: &str,
+    selected: bool,
+    action: Action,
+    asset_server: &AssetServer,
+) {
+    let color = if selected {
+        CLICKED_COLOR
+    } else {
+        NORMAL_COLOR
+    };
+
+    let mut button = parent.spawn((
+        ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(150.0), Val::Px(50.0)),
+                margin: UiRect::all(Val::Px(5.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            background_color: color.into(),
+            ..default()
+        },
+        action,
+    ));
+
+    if selected {
+        button.insert(SelectedButton);
+    }
+
+    button.with_children(|parent| {
+        parent.spawn(TextBundle::from_section(
+            text,
+            TextStyle {
+                font: asset_server.load(BUTTON_FONT_NAME),
+                font_size: BUTTON_FONT_SIZE_SMALL,
+                color: TEXT_COLOR,
+            },
+        ));
+    });
+}
+
+fn select(entity: Entity, background_color: &mut Mut<BackgroundColor>, commands: &mut Commands) {
+    background_color.0 = CLICKED_COLOR;
+    commands.entity(entity).insert(SelectedButton);
+}
+
+fn unselect(entity: Entity, background_color: &mut Mut<BackgroundColor>, commands: &mut Commands) {
+    background_color.0 = NORMAL_COLOR;
+    commands.entity(entity).remove::<SelectedButton>();
+}
+
+pub fn change_selection(
+    selected: bool,
+    entity: Entity,
+    background_color: &mut Mut<BackgroundColor>,
+    commands: &mut Commands,
+) {
+    if selected {
+        select(entity, background_color, commands);
+    } else {
+        unselect(entity, background_color, commands);
+    }
 }

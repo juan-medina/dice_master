@@ -24,10 +24,17 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 use super::{
     super::clear_scene,
     actions::{self, Action},
-    buttons,
+    buttons::{self, SelectedButton},
 };
 use crate::game::State;
 use bevy::prelude::*;
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+pub enum Submenu {
+    None,
+    Main,
+    Options,
+}
 
 pub struct Menu;
 
@@ -36,20 +43,36 @@ impl Plugin for Menu {
         app.add_system_set(SystemSet::on_enter(State::Menu).with_system(setup))
             .add_system_set(SystemSet::on_update(State::Menu).with_system(buttons::colors))
             .add_system_set(SystemSet::on_update(State::Menu).with_system(actions::system))
+            .add_system_set(SystemSet::on_exit(State::Menu).with_system(clear_scene::<OnMenuScene>))
+            .add_state(Submenu::None)
+            .add_system_set(SystemSet::on_enter(Submenu::Main).with_system(setup_main))
             .add_system_set(
-                SystemSet::on_exit(State::Menu).with_system(clear_scene::<OnMenuScene>),
+                SystemSet::on_exit(Submenu::Main).with_system(clear_scene::<OnMenuScene>),
+            )
+            .add_system_set(SystemSet::on_enter(Submenu::Options).with_system(setup_options))
+            .add_system_set(
+                SystemSet::on_update(Submenu::Options).with_system(update_options_buttons),
+            )
+            .add_system_set(
+                SystemSet::on_exit(Submenu::Options).with_system(clear_scene::<OnMenuScene>),
             );
     }
 }
 
 const FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const FONT_SIZE: f32 = 80.0;
+const FONT_SIZE_SMALL: f32 = 45.0;
 const FONT_COLOR: Color = Color::WHITE;
 
 #[derive(Component)]
 struct OnMenuScene;
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+use bevy::prelude::State as BevyState;
+fn setup(mut menu_state: ResMut<BevyState<Submenu>>) {
+    let _ = menu_state.set(Submenu::Main);
+}
+
+fn setup_main(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
             NodeBundle {
@@ -67,11 +90,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        // This will display its children in a column, from top to bottom
                         flex_direction: FlexDirection::Column,
-                        // `align_items` will align children on the cross axis. Here the main axis is
-                        // vertical (column), so the cross axis is horizontal. This will center the
-                        // children
                         align_items: AlignItems::Center,
                         ..default()
                     },
@@ -81,7 +100,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .with_children(|parent| {
                     parent.spawn(
                         TextBundle::from_section(
-                            "Menu!",
+                            "Menu",
                             TextStyle {
                                 font: asset_server.load(FONT_NAME),
                                 font_size: FONT_SIZE,
@@ -94,7 +113,127 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         }),
                     );
                     buttons::add(parent, "Play", Action::Play, asset_server.as_ref());
+                    buttons::add(parent, "Options", Action::Options, asset_server.as_ref());
                     buttons::add(parent, "Quit", Action::Quit, asset_server.as_ref());
                 });
         });
+}
+
+fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                ..default()
+            },
+            OnMenuScene,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    background_color: Color::GRAY.into(),
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn(
+                        TextBundle::from_section(
+                            "Options",
+                            TextStyle {
+                                font: asset_server.load(FONT_NAME),
+                                font_size: FONT_SIZE,
+                                color: FONT_COLOR,
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(50.0)),
+                            ..default()
+                        }),
+                    );
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Center,
+                                ..default()
+                            },
+                            background_color: Color::GRAY.into(),
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent.spawn(
+                                TextBundle::from_section(
+                                    "Display:",
+                                    TextStyle {
+                                        font: asset_server.load(FONT_NAME),
+                                        font_size: FONT_SIZE_SMALL,
+                                        color: FONT_COLOR,
+                                    },
+                                )
+                                .with_style(Style {
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    ..default()
+                                }),
+                            );
+                            buttons::setting(
+                                parent,
+                                "Windowed",
+                                true,
+                                Action::Windowed,
+                                asset_server.as_ref(),
+                            );
+                            buttons::setting(
+                                parent,
+                                "Full Screen",
+                                false,
+                                Action::FullScreen,
+                                asset_server.as_ref(),
+                            );
+                        });
+                    buttons::add(parent, "Back", Action::Back, asset_server.as_ref());
+                });
+        });
+}
+
+fn update_options_buttons(
+    mut buttons_query: Query<(Entity, &mut BackgroundColor, &Action)>,
+    selected_query: Query<&Action, With<SelectedButton>>,
+    mut commands: Commands,
+    mut windows: ResMut<Windows>,
+) {
+    let window = windows
+        .get_primary_mut()
+        .expect("we should have a primary window");
+
+    let windowed = window.mode() == WindowMode::Windowed;
+    let was_windowed = selected_query.single() == &Action::Windowed;
+
+    if windowed != was_windowed {
+        for (entity, mut background_color, action) in buttons_query.iter_mut() {
+            match action {
+                Action::Windowed => buttons::change_selection(
+                    windowed,
+                    entity,
+                    &mut background_color,
+                    &mut commands,
+                ),
+                Action::FullScreen => buttons::change_selection(
+                    !windowed,
+                    entity,
+                    &mut background_color,
+                    &mut commands,
+                ),
+                _ => {}
+            }
+        }
+    }
 }
