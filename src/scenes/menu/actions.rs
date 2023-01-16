@@ -21,11 +21,9 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use crate::game::{events, State};
+use crate::game::{events, Assets, State};
 use crate::scenes::menu::Submenu;
 use bevy::{app::AppExit, prelude::*};
-
-const AUDIO: &str = "menu/click.ogg";
 
 #[derive(Component, PartialEq)]
 pub enum Action {
@@ -43,7 +41,7 @@ pub fn system(
     interaction_query: Query<(&Interaction, &Action), (Changed<Interaction>, With<Button>)>,
     mut app_exit_events: EventWriter<AppExit>,
     mut game_state: ResMut<BevyState<State>>,
-    asset_server: Res<AssetServer>,
+    assets: Res<Assets>,
     audio: Res<Audio>,
     mut menu_state: ResMut<BevyState<Submenu>>,
     mut ev_change_display_mode: EventWriter<events::ChangeDisplayMode>,
@@ -74,7 +72,7 @@ pub fn system(
                     ev_change_display_mode.send(events::ChangeDisplayMode::full_screen());
                 }
             }
-            audio.play(asset_server.load(AUDIO));
+            audio.play(assets.menu_click.clone());
         }
     }
 }

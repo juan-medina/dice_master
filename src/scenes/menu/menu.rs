@@ -26,7 +26,7 @@ use super::{
     actions::{self, Action},
     buttons,
 };
-use crate::game::{events, Config, DisplayMode, State};
+use crate::game::{events, Assets, Config, DisplayMode, State};
 use bevy::prelude::*;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
@@ -59,7 +59,6 @@ impl Plugin for Menu {
     }
 }
 
-const FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const FONT_SIZE: f32 = 80.0;
 const FONT_SIZE_SMALL: f32 = 45.0;
 const FONT_COLOR: Color = Color::WHITE;
@@ -72,7 +71,7 @@ fn setup(mut menu_state: ResMut<BevyState<Submenu>>) {
     let _ = menu_state.set(Submenu::Main);
 }
 
-fn setup_main(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_main(mut commands: Commands, assets: Res<Assets>) {
     commands
         .spawn((
             NodeBundle {
@@ -102,7 +101,7 @@ fn setup_main(mut commands: Commands, asset_server: Res<AssetServer>) {
                         TextBundle::from_section(
                             "Menu",
                             TextStyle {
-                                font: asset_server.load(FONT_NAME),
+                                font: assets.default_font.clone(),
                                 font_size: FONT_SIZE,
                                 color: FONT_COLOR,
                             },
@@ -112,14 +111,14 @@ fn setup_main(mut commands: Commands, asset_server: Res<AssetServer>) {
                             ..default()
                         }),
                     );
-                    buttons::add(parent, "Play", Action::Play, asset_server.as_ref());
-                    buttons::add(parent, "Options", Action::Options, asset_server.as_ref());
-                    buttons::add(parent, "Quit", Action::Quit, asset_server.as_ref());
+                    buttons::add(parent, "Play", Action::Play, assets.as_ref());
+                    buttons::add(parent, "Options", Action::Options, assets.as_ref());
+                    buttons::add(parent, "Quit", Action::Quit, assets.as_ref());
                 });
         });
 }
 
-fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Config>) {
+fn setup_options(mut commands: Commands, assets: Res<Assets>, config: Res<Config>) {
     commands
         .spawn((
             NodeBundle {
@@ -149,7 +148,7 @@ fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>, config:
                         TextBundle::from_section(
                             "Options",
                             TextStyle {
-                                font: asset_server.load(FONT_NAME),
+                                font: assets.default_font.clone(),
                                 font_size: FONT_SIZE,
                                 color: FONT_COLOR,
                             },
@@ -174,7 +173,7 @@ fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>, config:
                                 TextBundle::from_section(
                                     "Display:",
                                     TextStyle {
-                                        font: asset_server.load(FONT_NAME),
+                                        font: assets.default_font.clone(),
                                         font_size: FONT_SIZE_SMALL,
                                         color: FONT_COLOR,
                                     },
@@ -189,17 +188,17 @@ fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>, config:
                                 "Windowed",
                                 config.mode == DisplayMode::Windowed,
                                 Action::Windowed,
-                                asset_server.as_ref(),
+                                assets.as_ref(),
                             );
                             buttons::setting(
                                 parent,
                                 "Full Screen",
                                 config.mode == DisplayMode::FullScreen,
                                 Action::FullScreen,
-                                asset_server.as_ref(),
+                                assets.as_ref(),
                             );
                         });
-                    buttons::add(parent, "Back", Action::Back, asset_server.as_ref());
+                    buttons::add(parent, "Back", Action::Back, assets.as_ref());
                 });
         });
 }

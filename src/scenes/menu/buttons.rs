@@ -21,9 +21,9 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use bevy::prelude::*;
-
 use super::actions::Action;
+use crate::game::Assets;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct SelectedButton;
@@ -35,7 +35,6 @@ pub const CLICKED_COLOR: Color = Color::rgb(0.35, 0.75, 0.35);
 
 pub const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
-const BUTTON_FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const BUTTON_FONT_SIZE: f32 = 40.0;
 const BUTTON_FONT_SIZE_SMALL: f32 = 30.0;
 
@@ -56,7 +55,7 @@ pub fn colors(
     }
 }
 
-pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, asset_server: &AssetServer) {
+pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, assets: &Assets) {
     parent
         .spawn((
             ButtonBundle {
@@ -76,7 +75,7 @@ pub fn add(parent: &mut ChildBuilder, text: &str, action: Action, asset_server: 
             parent.spawn(TextBundle::from_section(
                 text,
                 TextStyle {
-                    font: asset_server.load(BUTTON_FONT_NAME),
+                    font: assets.default_font.clone(),
                     font_size: BUTTON_FONT_SIZE,
                     color: TEXT_COLOR,
                 },
@@ -89,7 +88,7 @@ pub fn setting(
     text: &str,
     selected: bool,
     action: Action,
-    asset_server: &AssetServer,
+    assets: &Assets,
 ) {
     let color = if selected {
         CLICKED_COLOR
@@ -120,7 +119,7 @@ pub fn setting(
         parent.spawn(TextBundle::from_section(
             text,
             TextStyle {
-                font: asset_server.load(BUTTON_FONT_NAME),
+                font: assets.default_font.clone(),
                 font_size: BUTTON_FONT_SIZE_SMALL,
                 color: TEXT_COLOR,
             },

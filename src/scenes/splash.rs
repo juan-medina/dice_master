@@ -22,11 +22,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
 use super::clear_scene;
-use crate::game::State;
+use crate::game::{Assets, State};
 use bevy::prelude::*;
-
-const LOGO: &str = "splash/newolds.png";
-const AUDIO: &str = "splash/newolds.ogg";
 
 pub struct Splash;
 
@@ -46,16 +43,16 @@ struct OnSplashScene;
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audio>) {
+fn setup(mut commands: Commands, audio: Res<Audio>, assets: Res<Assets>) {
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load(LOGO),
+            texture: assets.newolds_logo.clone(),
             ..default()
         },
         OnSplashScene,
     ));
 
-    audio.play(asset_server.load(AUDIO));
+    audio.play(assets.newolds_sound.clone());
 
     commands.insert_resource(SplashTimer(Timer::from_seconds(10.0, TimerMode::Once)));
 }

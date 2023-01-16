@@ -30,9 +30,11 @@ use bevy::{
     window::{WindowResizeConstraints, WindowResized},
     winit::WinitSettings,
 };
+
+use bevy_asset_loader::prelude::*;
 use bevy_pkv::PkvStore;
 
-use super::{events, Config, DisplayMode, State};
+use super::{events, Assets, Config, DisplayMode, State};
 use crate::scenes;
 
 const TITLE: &str = "Dice Master!";
@@ -75,7 +77,12 @@ impl Game {
 
     fn set_scenes(&mut self) {
         self.app
-            .add_state(State::Splash)
+            .add_loading_state(
+                LoadingState::new(State::Loading)
+                    .continue_to_state(State::Splash)
+                    .with_collection::<Assets>(),
+            )
+            .add_state(State::Loading)
             .add_plugin(scenes::Hello)
             .add_plugin(scenes::Menu)
             .add_plugin(scenes::Splash);

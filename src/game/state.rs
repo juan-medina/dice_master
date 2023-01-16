@@ -23,6 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum State {
+    Loading,
     Splash,
     Menu,
     Hello,

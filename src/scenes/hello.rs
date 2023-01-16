@@ -21,7 +21,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use crate::game::State;
+use crate::game::{Assets, State};
 use bevy::prelude::*;
 
 pub struct Hello;
@@ -32,11 +32,10 @@ impl Plugin for Hello {
     }
 }
 
-const FONT_NAME: &str = "fonts/FiraSans-Bold.ttf";
 const FONT_SIZE: f32 = 80.0;
 const FONT_COLOR: Color = Color::WHITE;
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, assets: Res<Assets>) {
     commands
         .spawn((NodeBundle {
             style: Style {
@@ -52,7 +51,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextBundle::from_section(
                     "Hello World!",
                     TextStyle {
-                        font: asset_server.load(FONT_NAME),
+                        font: assets.default_font.clone(),
                         font_size: FONT_SIZE,
                         color: FONT_COLOR,
                     },

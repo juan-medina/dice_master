@@ -21,17 +21,17 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-mod assets;
-pub use assets::Assets;
+use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 
-mod state;
-pub use state::State;
-
-mod game;
-pub use game::Game;
-
-pub mod events;
-
-mod config;
-pub use config::Config;
-pub use config::DisplayMode;
+#[derive(AssetCollection, Resource)]
+pub struct Assets {
+    #[asset(path = "fonts/FiraSans-Bold.ttf")]
+    pub default_font: Handle<Font>,
+    #[asset(path = "splash/newolds.png")]
+    pub newolds_logo: Handle<Image>,
+    #[asset(path = "splash/newolds.ogg")]
+    pub newolds_sound: Handle<AudioSource>,
+    #[asset(path = "menu/click.ogg")]
+    pub menu_click: Handle<AudioSource>,
+}
