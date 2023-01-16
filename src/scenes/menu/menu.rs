@@ -24,9 +24,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 use super::{
     super::clear_scene,
     actions::{self, Action},
-    buttons::{self, SelectedButton},
+    buttons,
 };
-use crate::game::State;
+use crate::game::{events, Config, DisplayMode, State};
 use bevy::prelude::*;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
@@ -119,7 +119,7 @@ fn setup_main(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Config>) {
     commands
         .spawn((
             NodeBundle {
@@ -187,14 +187,14 @@ fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>) {
                             buttons::setting(
                                 parent,
                                 "Windowed",
-                                true,
+                                config.mode == DisplayMode::Windowed,
                                 Action::Windowed,
                                 asset_server.as_ref(),
                             );
                             buttons::setting(
                                 parent,
                                 "Full Screen",
-                                false,
+                                config.mode == DisplayMode::FullScreen,
                                 Action::FullScreen,
                                 asset_server.as_ref(),
                             );
@@ -205,34 +205,20 @@ fn setup_options(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn update_options_buttons(
+    mut ev_change_display_mode: EventReader<events::ChangeDisplayMode>,
     mut buttons_query: Query<(Entity, &mut BackgroundColor, &Action)>,
-    selected_query: Query<&Action, With<SelectedButton>>,
     mut commands: Commands,
-    mut windows: ResMut<Windows>,
 ) {
-    let window = windows
-        .get_primary_mut()
-        .expect("we should have a primary window");
-
-    let windowed = window.mode() == WindowMode::Windowed;
-    let was_windowed = selected_query.single() == &Action::Windowed;
-
-    if windowed != was_windowed {
+    for change_display_mode in ev_change_display_mode.iter() {
         for (entity, mut background_color, action) in buttons_query.iter_mut() {
-            match action {
-                Action::Windowed => buttons::change_selection(
-                    windowed,
-                    entity,
-                    &mut background_color,
-                    &mut commands,
-                ),
-                Action::FullScreen => buttons::change_selection(
-                    !windowed,
-                    entity,
-                    &mut background_color,
-                    &mut commands,
-                ),
-                _ => {}
+            let need_selection_change = match action {
+                Action::Windowed => Some(DisplayMode::Windowed),
+                Action::FullScreen => Some(DisplayMode::FullScreen),
+                _ => None,
+            };
+            if let Some(mode) = need_selection_change {
+                let selected = mode == change_display_mode.mode;
+                buttons::change_selection(selected, entity, &mut background_color, &mut commands);
             }
         }
     }

@@ -30,7 +30,7 @@ use bevy::{
     winit::WinitSettings,
 };
 
-use super::State;
+use super::{events, Config, State};
 use crate::scenes;
 
 const TITLE: &str = "Dice Master!";
@@ -49,6 +49,7 @@ impl Game {
 
     pub fn run(&mut self) {
         self.default_plugins();
+        self.insert_plugins();
         self.insert_resources();
         self.add_main_systems();
         self.set_scenes();
@@ -71,7 +72,8 @@ impl Game {
             .insert_resource(TextSettings {
                 allow_dynamic_font_size: true,
                 ..default()
-            });
+            })
+            .insert_resource(Config::default());
     }
 
     fn add_main_systems(&mut self) {
@@ -113,6 +115,10 @@ impl Game {
             level: bevy::log::Level::INFO,
         }
     }
+
+    fn insert_plugins(&mut self) {
+        self.app.add_plugin(events::Handler);
+    }
 }
 
 fn setup(mut commands: Commands) {
@@ -131,21 +137,14 @@ fn scale_ui(resize_event: Res<Events<WindowResized>>, mut ui_scale: ResMut<UiSca
     }
 }
 
-fn toggle_full_screen_on_alt_enter(input: Res<Input<KeyCode>>, windows: ResMut<Windows>) {
+fn toggle_full_screen_on_alt_enter(
+    input: Res<Input<KeyCode>>,
+    config: Res<Config>,
+    mut ev_change_display_mode: EventWriter<events::ChangeDisplayMode>,
+) {
     if (input.pressed(KeyCode::LAlt) || input.pressed(KeyCode::RAlt))
         && input.just_pressed(KeyCode::Return)
     {
-        change_window_mode(windows);
-    }
-}
-
-fn change_window_mode(mut windows: ResMut<Windows>) {
-    let window = windows
-        .get_primary_mut()
-        .expect("we should have a primary window");
-    if window.mode() == WindowMode::Windowed {
-        window.set_mode(WindowMode::BorderlessFullscreen);
-    } else {
-        window.set_mode(WindowMode::Windowed);
+        ev_change_display_mode.send(events::ChangeDisplayMode::to(!config.mode.clone()));
     }
 }

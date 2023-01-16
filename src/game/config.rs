@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 /***
 Copyright (c) 2022 Juan Medina
 
@@ -20,15 +22,40 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
+use bevy::prelude::*;
 
-mod state;
-pub use state::State;
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum DisplayMode {
+    Windowed,
+    FullScreen,
+}
 
-mod game;
-pub use game::Game;
+impl Default for DisplayMode {
+    fn default() -> Self {
+        DisplayMode::Windowed
+    }
+}
 
-pub mod events;
+impl Not for DisplayMode {
+    type Output = Self;
 
-mod config;
-pub use config::Config;
-pub use config::DisplayMode;
+    fn not(self) -> Self::Output {
+        match self {
+            DisplayMode::Windowed => DisplayMode::FullScreen,
+            DisplayMode::FullScreen => DisplayMode::Windowed,
+        }
+    }
+}
+
+#[derive(Resource, Debug, Clone, Eq, PartialEq, Hash)]
+pub struct Config {
+    pub mode: DisplayMode,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            mode: Default::default(),
+        }
+    }
+}

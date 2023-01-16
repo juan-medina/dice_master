@@ -21,7 +21,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use crate::game::State;
+use crate::game::{events, State};
 use crate::scenes::menu::Submenu;
 use bevy::{app::AppExit, prelude::*};
 
@@ -46,7 +46,7 @@ pub fn system(
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
     mut menu_state: ResMut<BevyState<Submenu>>,
-    mut windows: ResMut<Windows>,
+    mut ev_change_display_mode: EventWriter<events::ChangeDisplayMode>,
 ) {
     for (interaction, button_action) in &interaction_query {
         if *interaction == Interaction::Clicked {
@@ -67,16 +67,11 @@ pub fn system(
                     .set(Submenu::Main)
                     .expect("Failed to set menu state"),
                 Action::Windowed => {
-                    let window = windows
-                        .get_primary_mut()
-                        .expect("we should have a primary window");
-                    window.set_mode(WindowMode::Windowed);
+                    ev_change_display_mode.send(events::ChangeDisplayMode::windowed());
                 }
+
                 Action::FullScreen => {
-                    let window = windows
-                        .get_primary_mut()
-                        .expect("we should have a primary window");
-                    window.set_mode(WindowMode::BorderlessFullscreen);
+                    ev_change_display_mode.send(events::ChangeDisplayMode::full_screen());
                 }
             }
             audio.play(asset_server.load(AUDIO));
