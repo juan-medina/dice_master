@@ -23,8 +23,9 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub enum DisplayMode {
     Windowed,
     FullScreen,
@@ -47,7 +48,7 @@ impl Not for DisplayMode {
     }
 }
 
-#[derive(Resource, Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Resource, Copy, Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub struct Config {
     pub mode: DisplayMode,
 }

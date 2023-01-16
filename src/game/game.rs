@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
 use bevy::{
+    app::AppExit,
     log::LogPlugin,
     prelude::*,
     render::camera::ScalingMode,
@@ -29,14 +30,18 @@ use bevy::{
     window::{WindowResizeConstraints, WindowResized},
     winit::WinitSettings,
 };
+use bevy_pkv::PkvStore;
 
-use super::{events, Config, State};
+use super::{events, Config, DisplayMode, State};
 use crate::scenes;
 
 const TITLE: &str = "Dice Master!";
 const LOG_FILTER: &str = "wgpu=error,dice_master=debug";
 const DESIGN_RESOLUTION: Vec2 = Vec2::new(1920., 1080.);
 const CLEAR_COLOR: Color = Color::rgb(0., 0., 0.);
+const COMPANY: &str = "NewOlds";
+const APP_NAME: &str = "dice_master";
+const CONFIG_KEY: &str = "game_config";
 
 pub struct Game {
     app: App,
@@ -48,13 +53,24 @@ impl Game {
     }
 
     pub fn run(&mut self) {
-        self.default_plugins();
+        let (store, config) = self.get_config();
+        self.default_plugins(config);
         self.insert_plugins();
-        self.insert_resources();
+        self.insert_resources(store, config);
         self.add_main_systems();
         self.set_scenes();
 
         self.app.run();
+    }
+
+    fn get_config(&self) -> (PkvStore, Config) {
+        let store = PkvStore::new(COMPANY, APP_NAME);
+        let config = if let Ok(config) = store.get::<Config>(CONFIG_KEY) {
+            config
+        } else {
+            Config::default()
+        };
+        (store, config)
     }
 
     fn set_scenes(&mut self) {
@@ -65,7 +81,7 @@ impl Game {
             .add_plugin(scenes::Splash);
     }
 
-    fn insert_resources(&mut self) {
+    fn insert_resources(&mut self, store: PkvStore, config: Config) {
         self.app
             .insert_resource(ClearColor(CLEAR_COLOR))
             .insert_resource(WinitSettings::desktop_app())
@@ -73,7 +89,8 @@ impl Game {
                 allow_dynamic_font_size: true,
                 ..default()
             })
-            .insert_resource(Config::default());
+            .insert_resource(config)
+            .insert_resource(store);
     }
 
     fn add_main_systems(&mut self) {
@@ -81,20 +98,27 @@ impl Game {
             .add_startup_system(setup)
             .add_system(scale_ui)
             .add_system(toggle_full_screen_on_alt_enter)
-            .add_system(bevy::window::close_on_esc);
+            .add_system(bevy::window::close_on_esc)
+            .add_system_to_stage(CoreStage::PostUpdate, app_exit);
     }
 
-    fn default_plugins(&mut self) -> &mut App {
+    fn default_plugins(&mut self, config: Config) -> &mut App {
         self.app.add_plugins(
             DefaultPlugins
-                .set(self.setup_window())
+                .set(self.setup_window(config))
                 .set(self.setup_log()),
         )
     }
 
-    fn setup_window(&self) -> WindowPlugin {
-        WindowPlugin {
-            window: WindowDescriptor {
+    fn setup_window(&self, config: Config) -> WindowPlugin {
+        let window = if config.mode == DisplayMode::FullScreen {
+            WindowDescriptor {
+                title: TITLE.into(),
+                mode: WindowMode::BorderlessFullscreen,
+                ..default()
+            }
+        } else {
+            WindowDescriptor {
                 title: TITLE.into(),
                 width: DESIGN_RESOLUTION.x,
                 height: DESIGN_RESOLUTION.y,
@@ -103,8 +127,12 @@ impl Game {
                     min_height: DESIGN_RESOLUTION.y / 2.,
                     ..default()
                 },
-                ..Default::default()
-            },
+                ..default()
+            }
+        };
+
+        WindowPlugin {
+            window,
             ..default()
         }
     }
@@ -146,5 +174,18 @@ fn toggle_full_screen_on_alt_enter(
         && input.just_pressed(KeyCode::Return)
     {
         ev_change_display_mode.send(events::ChangeDisplayMode::to(!config.mode.clone()));
+    }
+}
+
+fn app_exit(
+    mut events: EventReader<AppExit>,
+    config: Res<Config>,
+    mut config_store: ResMut<PkvStore>,
+) {
+    for _ in events.iter() {
+        debug!("config {:?}", config);
+        config_store
+            .set(CONFIG_KEY, config.as_ref())
+            .expect("config can't no be saved");
     }
 }
