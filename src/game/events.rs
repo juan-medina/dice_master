@@ -64,7 +64,7 @@ fn game_events(
             .expect("we should have a primary window");
         window.set_mode(match change_display_mode.mode {
             DisplayMode::Windowed => WindowMode::Windowed,
-            DisplayMode::FullScreen => WindowMode::Fullscreen,
+            DisplayMode::FullScreen => WindowMode::BorderlessFullscreen,
         });
     }
 }
