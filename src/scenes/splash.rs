@@ -54,7 +54,7 @@ fn setup(mut commands: Commands, audio: Res<Audio>, assets: Res<Assets>) {
 
     audio.play(assets.newolds_sound.clone());
 
-    commands.insert_resource(SplashTimer(Timer::from_seconds(10.0, TimerMode::Once)));
+    commands.insert_resource(SplashTimer(Timer::from_seconds(4.0, TimerMode::Once)));
 }
 
 use bevy::prelude::State as BevyState;
