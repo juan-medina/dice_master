@@ -32,7 +32,8 @@ edition = "2021"
 bevy = { version = "0.9.1", features = ["dynamic"] }
 bevy_pkv = "0.6.0"
 serde = "1.0.152"
-bevy_asset_loader = "0.14.1"
+bevy_asset_loader = { version = "0.14.1" , features = ["progress_tracking"] }
+iyes_progress = { version = "0.7.1", features = ["assets"] }
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

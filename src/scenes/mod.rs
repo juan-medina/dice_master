@@ -32,6 +32,9 @@ pub use splash::Splash;
 mod menu;
 pub use menu::Menu;
 
+mod loading;
+pub use loading::Loading;
+
 fn clear_scene<T: Component>(to_clear: Query<Entity, With<T>>, mut commands: Commands) {
     for entity in &to_clear {
         commands.entity(entity).despawn_recursive();

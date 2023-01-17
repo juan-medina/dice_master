@@ -28,11 +28,11 @@ use bevy::{
     render::camera::ScalingMode,
     text::TextSettings,
     window::{WindowResizeConstraints, WindowResized},
-    winit::WinitSettings,
 };
 
 use bevy_asset_loader::prelude::*;
 use bevy_pkv::PkvStore;
+use iyes_progress::ProgressPlugin;
 
 use super::{events, Assets, Config, DisplayMode, State};
 use crate::scenes;
@@ -77,12 +77,14 @@ impl Game {
 
     fn set_scenes(&mut self) {
         self.app
-            .add_loading_state(
-                LoadingState::new(State::Loading)
-                    .continue_to_state(State::Splash)
-                    .with_collection::<Assets>(),
+            .add_loading_state(LoadingState::new(State::Loading).with_collection::<Assets>())
+            .add_plugin(
+                ProgressPlugin::new(State::Loading)
+                    .continue_to(State::Splash)
+                    .track_assets(),
             )
             .add_state(State::Loading)
+            .add_plugin(scenes::Loading)
             .add_plugin(scenes::Hello)
             .add_plugin(scenes::Menu)
             .add_plugin(scenes::Splash);
@@ -91,7 +93,6 @@ impl Game {
     fn insert_resources(&mut self, store: PkvStore, config: Config) {
         self.app
             .insert_resource(ClearColor(CLEAR_COLOR))
-            .insert_resource(WinitSettings::desktop_app())
             .insert_resource(TextSettings {
                 allow_dynamic_font_size: true,
                 ..default()
