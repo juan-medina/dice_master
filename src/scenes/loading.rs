@@ -52,11 +52,11 @@ impl Plugin for Loading {
 struct OnLoadingScene;
 
 #[derive(Component, Debug)]
-struct RotateSprite {
+struct Rotate {
     speed: f32,
 }
 
-impl RotateSprite {
+impl Rotate {
     fn new(speed: f32) -> Self {
         Self { speed }
     }
@@ -68,20 +68,42 @@ fn setup(mut commands: Commands, mut images: ResMut<BevyAssets<Image>>) {
     let image_type = ImageType::Extension("png");
     let image = Image::from_buffer(buff, image_type, CompressedImageFormats::NONE, false)
         .expect("Failed to load image from buffer");
-    commands.spawn((
-        SpriteBundle {
-            texture: images.add(image),
-            transform: Transform::from_xyz(1920. / 2. - 100., -1080. / 2. + 100., 0.),
-            ..default()
-        },
-        OnLoadingScene,
-        RotateSprite::new(180. * PI / 200.),
-    ));
+    let handle = images.add(image);
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    justify_content: JustifyContent::SpaceBetween,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            OnLoadingScene,
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                ImageBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        position: UiRect {
+                            bottom: Val::Px(0.),
+                            right: Val::Px(0.),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    image: UiImage::from(handle),
+                    ..Default::default()
+                },
+                Rotate::new(180. * PI / 200.),
+            ));
+        });
 }
 
-fn update(mut q_item: Query<(&RotateSprite, &mut Transform)>, time: Res<Time>) {
+fn update(mut q_item: Query<(&Rotate, &mut Transform)>, time: Res<Time>) {
     for (rotation, mut transform) in q_item.iter_mut() {
-        transform.rotate_z(-rotation.speed * time.delta_seconds());
+        transform.rotate_z(rotation.speed * time.delta_seconds());
     }
 }
 
@@ -97,7 +119,6 @@ fn print_progress(progress: Option<Res<ProgressCounter>>, mut last_done: Local<u
 const DURATION_LONG_TASK_IN_SECS: f64 = 5.0;
 fn track_fake_long_task(time: Res<Time>, progress: Res<ProgressCounter>) {
     if time.elapsed_seconds_f64() > DURATION_LONG_TASK_IN_SECS {
-        info!("Long task is completed");
         progress.manually_track(true.into());
     } else {
         progress.manually_track(false.into());
