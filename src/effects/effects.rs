@@ -34,7 +34,7 @@ pub struct Handler;
 
 impl Plugin for Handler {
     fn build(&self, app: &mut App) {
-        app.add_system(go_to_state_system);
+        app.add_system(go_to_state).add_system(rotate_items);
     }
 }
 
@@ -65,20 +65,38 @@ impl Go {
 }
 
 use bevy::prelude::State as BevyState;
-fn go_to_state_system(
+fn go_to_state(
     mut game_state: ResMut<BevyState<State>>,
     time: Res<Time>,
     mut op_goto: Option<ResMut<GoToState>>,
     mut commands: Commands,
 ) {
     if let Some(goto) = op_goto.as_mut() {
-        goto.timer.tick(time.delta());
-        if goto.timer.finished() {
+        if goto.timer.tick(time.delta()).finished() {
             game_state
                 .set(goto.state)
                 .expect("Failed to set game state");
 
             commands.remove_resource::<GoToState>();
         }
+    }
+}
+
+#[derive(Component, Debug)]
+pub struct Rotate {
+    speed: f32,
+}
+
+impl Rotate {
+    pub fn angle_per_second(angle: f32) -> Self {
+        Self {
+            speed: angle.to_radians(),
+        }
+    }
+}
+
+fn rotate_items(mut q_item: Query<(&Rotate, &mut Transform)>, time: Res<Time>) {
+    for (rotation, mut transform) in q_item.iter_mut() {
+        transform.rotate_z(rotation.speed * time.delta_seconds());
     }
 }

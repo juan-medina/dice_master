@@ -26,41 +26,28 @@ use bevy::{
     render::texture::{CompressedImageFormats, ImageType},
 };
 use iyes_progress::ProgressCounter;
-use std::f32::consts::PI;
 
 use super::clear_scene;
-use crate::game::State;
+use crate::{effects, game::State};
 
 pub struct Loading;
 
 impl Plugin for Loading {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(State::Loading).with_system(setup))
-            .add_system_set(SystemSet::on_update(State::Loading).with_system(update))
             .add_system_set(SystemSet::on_update(State::Loading).with_system(print_progress))
             .add_system_set(
                 SystemSet::on_exit(State::Loading).with_system(clear_scene::<OnLoadingScene>),
             )
             .add_system_set(
                 SystemSet::on_update(State::Loading)
-                    .with_system(track_fake_long_task.before(print_progress)),
+                    .with_system(fake_long_task.before(print_progress)),
             );
     }
 }
 
 #[derive(Component)]
 struct OnLoadingScene;
-
-#[derive(Component, Debug)]
-struct Rotate {
-    speed: f32,
-}
-
-impl Rotate {
-    fn new(speed: f32) -> Self {
-        Self { speed }
-    }
-}
 
 use bevy::asset::Assets as BevyAssets;
 fn setup(mut commands: Commands, mut images: ResMut<BevyAssets<Image>>) {
@@ -96,15 +83,9 @@ fn setup(mut commands: Commands, mut images: ResMut<BevyAssets<Image>>) {
                     image: UiImage::from(handle),
                     ..Default::default()
                 },
-                Rotate::new(180. * PI / 200.),
+                effects::Rotate::angle_per_second(200.),
             ));
         });
-}
-
-fn update(mut q_item: Query<(&Rotate, &mut Transform)>, time: Res<Time>) {
-    for (rotation, mut transform) in q_item.iter_mut() {
-        transform.rotate_z(rotation.speed * time.delta_seconds());
-    }
 }
 
 fn print_progress(progress: Option<Res<ProgressCounter>>, mut last_done: Local<u32>) {
@@ -117,7 +98,7 @@ fn print_progress(progress: Option<Res<ProgressCounter>>, mut last_done: Local<u
 }
 
 const DURATION_LONG_TASK_IN_SECS: f64 = 5.0;
-fn track_fake_long_task(time: Res<Time>, progress: Res<ProgressCounter>) {
+fn fake_long_task(time: Res<Time>, progress: Res<ProgressCounter>) {
     if time.elapsed_seconds_f64() > DURATION_LONG_TASK_IN_SECS {
         progress.manually_track(true.into());
     } else {
