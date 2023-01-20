@@ -32,6 +32,7 @@ use bevy::{
 
 use bevy_asset_loader::prelude::*;
 use bevy_pkv::PkvStore;
+use bevy_tweening::TweeningPlugin;
 use iyes_progress::ProgressPlugin;
 
 use super::{events, Assets, Config, DisplayMode, State};
@@ -153,7 +154,9 @@ impl Game {
     }
 
     fn insert_plugins(&mut self) {
-        self.app.add_plugin(events::Handler);
+        self.app
+            .add_plugin(events::Handler)
+            .add_plugin(TweeningPlugin);
     }
 }
 
