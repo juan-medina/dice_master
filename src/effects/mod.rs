@@ -21,44 +21,12 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use super::clear_scene;
-use crate::{
-    effects::{fade, Go},
-    game::{Assets, State},
-};
 use bevy::prelude::*;
 
-pub struct Splash;
+pub mod fade;
 
-impl Plugin for Splash {
-    fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(State::Splash).with_system(setup))
-            .add_system_set(
-                SystemSet::on_exit(State::Splash).with_system(clear_scene::<OnSplashScene>),
-            );
-    }
-}
+pub mod effects;
+pub use effects::*;
 
-#[derive(Component)]
-struct OnSplashScene;
-
-const IN: u64 = 2;
-const PAUSE: u64 = 2;
-const OUT: u64 = 1;
-const DELAY: f32 = (IN + PAUSE + OUT + 1) as f32;
-
-fn setup(mut commands: Commands, audio: Res<Audio>, assets: Res<Assets>) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: fade::out_sprite(),
-            texture: assets.newolds_logo.clone(),
-            ..default()
-        },
-        OnSplashScene,
-        fade::in_out_sprite(IN, PAUSE, OUT),
-    ));
-
-    audio.play(assets.newolds_sound.clone());
-
-    commands.insert_resource(Go::to(State::Menu).after(DELAY));
-}
+const INVISIBLE: Color = Color::rgba(1., 1., 1., 0.0);
+const VISIBLE: Color = Color::rgba(1., 1., 1., 1.0);

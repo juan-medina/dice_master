@@ -24,6 +24,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // make on release to not show the console
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod effects;
 mod game;
 mod scenes;
 

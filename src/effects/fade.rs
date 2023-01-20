@@ -21,44 +21,46 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***/
 
-use super::clear_scene;
-use crate::{
-    effects::{fade, Go},
-    game::{Assets, State},
-};
+use std::time::Duration;
+
 use bevy::prelude::*;
+use bevy_tweening::{lens::SpriteColorLens, *};
 
-pub struct Splash;
+use super::{delay, INVISIBLE, VISIBLE};
 
-impl Plugin for Splash {
-    fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(State::Splash).with_system(setup))
-            .add_system_set(
-                SystemSet::on_exit(State::Splash).with_system(clear_scene::<OnSplashScene>),
-            );
+pub fn sprite_in(seconds: u64) -> Tween<Sprite> {
+    Tween::new(
+        EaseFunction::QuadraticIn,
+        Duration::from_secs(seconds),
+        SpriteColorLens {
+            start: INVISIBLE.into(),
+            end: VISIBLE.into(),
+        },
+    )
+}
+
+pub fn sprite_out(seconds: u64) -> Tween<Sprite> {
+    Tween::new(
+        EaseFunction::QuadraticOut,
+        Duration::from_secs(seconds),
+        SpriteColorLens {
+            start: VISIBLE.into(),
+            end: INVISIBLE.into(),
+        },
+    )
+}
+
+pub fn out_sprite() -> Sprite {
+    Sprite {
+        color: INVISIBLE,
+        ..Default::default()
     }
 }
 
-#[derive(Component)]
-struct OnSplashScene;
+pub fn in_out_sprite(time_in: u64, pause: u64, time_out: u64) -> Animator<Sprite> {
+    let fade_in = sprite_in(time_in);
+    let pause = delay(pause);
+    let fade_out = sprite_out(time_out);
 
-const IN: u64 = 2;
-const PAUSE: u64 = 2;
-const OUT: u64 = 1;
-const DELAY: f32 = (IN + PAUSE + OUT + 1) as f32;
-
-fn setup(mut commands: Commands, audio: Res<Audio>, assets: Res<Assets>) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: fade::out_sprite(),
-            texture: assets.newolds_logo.clone(),
-            ..default()
-        },
-        OnSplashScene,
-        fade::in_out_sprite(IN, PAUSE, OUT),
-    ));
-
-    audio.play(assets.newolds_sound.clone());
-
-    commands.insert_resource(Go::to(State::Menu).after(DELAY));
+    Animator::new(fade_in.then(pause).then(fade_out))
 }

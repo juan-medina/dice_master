@@ -36,7 +36,7 @@ use bevy_tweening::TweeningPlugin;
 use iyes_progress::ProgressPlugin;
 
 use super::{events, Assets, Config, DisplayMode, State};
-use crate::scenes;
+use crate::{effects, scenes};
 
 const TITLE: &str = "Dice Master!";
 const LOG_FILTER: &str = "wgpu=error,dice_master=debug";
@@ -156,6 +156,7 @@ impl Game {
     fn insert_plugins(&mut self) {
         self.app
             .add_plugin(events::Handler)
+            .add_plugin(effects::Handler)
             .add_plugin(TweeningPlugin);
     }
 }
